@@ -55,6 +55,7 @@ set(PBLINK_CC_SOURCES
     src/Transport.cpp
     src/UdpTransport.cpp
     src/SerialTransport.cpp
+    src/Decoder.cpp
     ${NANOPB_CORE_SOURCES}
     ${NANOPB_GENERATED_SRCS}
 )
@@ -74,8 +75,12 @@ target_include_directories(pblink_cc PUBLIC
 add_executable(pblink_example examples/Main.cpp)
 target_link_libraries(pblink_example PRIVATE pblink_cc)
 
-# Test executable
+# Test executables
 enable_testing()
 add_executable(pblink_tests tests/TestClient.cpp)
 target_link_libraries(pblink_tests PRIVATE pblink_cc)
 add_test(NAME client_lifecycle_test COMMAND pblink_tests)
+
+add_executable(pblink_decoder_tests tests/TestDecoder.cpp)
+target_link_libraries(pblink_decoder_tests PRIVATE pblink_cc)
+add_test(NAME decoder_test COMMAND pblink_decoder_tests)
