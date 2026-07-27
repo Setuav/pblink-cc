@@ -14,6 +14,17 @@ set(GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 file(MAKE_DIRECTORY ${GENERATED_DIR})
 
+# Run generate_cc.py to create GeneratedMessages.hpp, GeneratedTopicTraits.inc, GeneratedClientDispatch.inc
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_cc.py
+        --yaml-file ${PROTO_DIR}/topics.yaml
+        --output-dir ${GENERATED_DIR}
+    RESULT_VARIABLE CC_GEN_RESULT
+)
+if(NOT CC_GEN_RESULT EQUAL 0)
+    message(FATAL_ERROR "Failed to run generate_cc.py for pblink-cc")
+endif()
+
 # Gather all .proto files from proto/custom and proto/generated
 file(GLOB CUSTOM_PROTO_FILES "${PROTO_DIR}/custom/*.proto")
 file(GLOB GENERATED_PROTO_FILES "${PROTO_DIR}/generated/*.proto")
@@ -35,7 +46,7 @@ foreach(PROTO_FILE ${ALL_PROTO_FILES})
             -I${PROTO_DIR}/generated
             -I${NANOPB_DIR}/generator
             ${PROTO_FILE}
-        DEPENDS ${PROTO_FILE} ${NANOPB_DIR}/generator/nanopb_generator.py
+        DEPENDS ${PROTO_FILE} ${NANOPB_DIR}/generator/nanopb_generator.py ${PROTO_DIR}/topics.yaml
         COMMENT "Generating Nanopb bindings for ${PROTO_NAME}.proto"
     )
     list(APPEND NANOPB_GENERATED_SRCS ${PB_C})

@@ -26,51 +26,13 @@ Client::~Client() {
     stop();
 }
 
-#define INIT_BUFFER(TYPE) get_or_create_buffer<TYPE>(TopicTraits<TYPE>::msg_type_id);
-
 void Client::init_buffers() {
-    INIT_BUFFER(VehicleLocalPosition)
-    INIT_BUFFER(VehicleStatus)
-    INIT_BUFFER(VehicleAttitude)
-    INIT_BUFFER(VehicleGlobalPosition)
-    INIT_BUFFER(BatteryStatus)
-    INIT_BUFFER(VehicleLandDetected)
-    INIT_BUFFER(HomePosition)
-    INIT_BUFFER(VehicleCommandAck)
-    INIT_BUFFER(SensorCombined)
-    INIT_BUFFER(SensorGps)
-    INIT_BUFFER(VehicleAngularVelocity)
-    INIT_BUFFER(VehicleAcceleration)
-    INIT_BUFFER(EstimatorStatus)
-    INIT_BUFFER(VehicleOdometry)
-    INIT_BUFFER(ActuatorOutputs)
-    INIT_BUFFER(ActuatorArmed)
-    INIT_BUFFER(RegisterExtComponentReply)
-    INIT_BUFFER(ArmingCheckReply)
-    INIT_BUFFER(OnboardComputerStatus)
-    INIT_BUFFER(VehicleThrustSetpoint)
-    INIT_BUFFER(VehicleTorqueSetpoint)
-    INIT_BUFFER(TopicListResponse)
-    INIT_BUFFER(LinkStatusResponse)
-
-    INIT_BUFFER(OffboardControlMode)
-    INIT_BUFFER(VehicleCommand)
-    INIT_BUFFER(ManualControlSetpoint)
-    INIT_BUFFER(TrajectorySetpoint)
-    INIT_BUFFER(RegisterExtComponentRequest)
-    INIT_BUFFER(UnregisterExtComponent)
-    INIT_BUFFER(ArmingCheckRequest)
-    INIT_BUFFER(VehicleLocalPositionSetpoint)
-    INIT_BUFFER(SubscriptionRequest)
-    INIT_BUFFER(ParameterRequest)
-    INIT_BUFFER(ParameterSet)
-    INIT_BUFFER(ParameterValue)
-    INIT_BUFFER(TimeSync)
-    INIT_BUFFER(TopicListRequest)
-    INIT_BUFFER(LinkStatusRequest)
-}
-
+#define PBLINK_INIT_BUFFERS_SECTION
+#define INIT_BUFFER(TYPE) get_or_create_buffer<TYPE>(TopicTraits<TYPE>::msg_type_id);
+#include "GeneratedClientDispatch.inc"
 #undef INIT_BUFFER
+#undef PBLINK_INIT_BUFFERS_SECTION
+}
 
 bool Client::start() {
     if (is_running_) return true;
@@ -120,6 +82,9 @@ void Client::rx_thread_func() {
     }
 }
 
+void Client::handle_decoded_frame(const Frame& frame) {
+    switch (frame.msg_type_id) {
+#define PBLINK_DISPATCH_SWITCH_SECTION
 #define HANDLE_TOPIC(TYPE) \
     case TopicTraits<TYPE>::msg_type_id: { \
         TYPE msg = TopicTraits<TYPE>::init_default(); \
@@ -130,48 +95,9 @@ void Client::rx_thread_func() {
         } \
         break; \
     }
-
-void Client::handle_decoded_frame(const Frame& frame) {
-    switch (frame.msg_type_id) {
-        HANDLE_TOPIC(VehicleLocalPosition)
-        HANDLE_TOPIC(VehicleStatus)
-        HANDLE_TOPIC(VehicleAttitude)
-        HANDLE_TOPIC(VehicleGlobalPosition)
-        HANDLE_TOPIC(BatteryStatus)
-        HANDLE_TOPIC(VehicleLandDetected)
-        HANDLE_TOPIC(HomePosition)
-        HANDLE_TOPIC(VehicleCommandAck)
-        HANDLE_TOPIC(SensorCombined)
-        HANDLE_TOPIC(SensorGps)
-        HANDLE_TOPIC(VehicleAngularVelocity)
-        HANDLE_TOPIC(VehicleAcceleration)
-        HANDLE_TOPIC(EstimatorStatus)
-        HANDLE_TOPIC(VehicleOdometry)
-        HANDLE_TOPIC(ActuatorOutputs)
-        HANDLE_TOPIC(ActuatorArmed)
-        HANDLE_TOPIC(RegisterExtComponentReply)
-        HANDLE_TOPIC(ArmingCheckReply)
-        HANDLE_TOPIC(OnboardComputerStatus)
-        HANDLE_TOPIC(VehicleThrustSetpoint)
-        HANDLE_TOPIC(VehicleTorqueSetpoint)
-        HANDLE_TOPIC(TopicListResponse)
-        HANDLE_TOPIC(LinkStatusResponse)
-
-        HANDLE_TOPIC(OffboardControlMode)
-        HANDLE_TOPIC(VehicleCommand)
-        HANDLE_TOPIC(ManualControlSetpoint)
-        HANDLE_TOPIC(TrajectorySetpoint)
-        HANDLE_TOPIC(RegisterExtComponentRequest)
-        HANDLE_TOPIC(UnregisterExtComponent)
-        HANDLE_TOPIC(ArmingCheckRequest)
-        HANDLE_TOPIC(VehicleLocalPositionSetpoint)
-        HANDLE_TOPIC(SubscriptionRequest)
-        HANDLE_TOPIC(ParameterRequest)
-        HANDLE_TOPIC(ParameterSet)
-        HANDLE_TOPIC(ParameterValue)
-        HANDLE_TOPIC(TimeSync)
-        HANDLE_TOPIC(TopicListRequest)
-        HANDLE_TOPIC(LinkStatusRequest)
+#include "GeneratedClientDispatch.inc"
+#undef HANDLE_TOPIC
+#undef PBLINK_DISPATCH_SWITCH_SECTION
         default:
             break;
     }
@@ -190,8 +116,6 @@ void Client::handle_decoded_frame(const Frame& frame) {
         cb(frame.payload.data(), frame.payload_len);
     }
 }
-
-#undef HANDLE_TOPIC
 
 bool Client::send_msg(uint8_t msg_type_id, const pb_msgdesc_t* fields, const void* src_struct) {
     if (!transport_ || !transport_->is_open()) return false;
