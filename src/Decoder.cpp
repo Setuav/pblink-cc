@@ -22,6 +22,7 @@ uint16_t Decoder::calculate_crc16(const uint8_t* data, size_t length, uint16_t i
 
 uint8_t Decoder::calculate_header_crc(uint8_t msg_type, uint8_t seq, uint16_t payload_len) {
     uint8_t crc = 0;
+    crc ^= FRAME_MAGIC_BYTE;
     crc ^= msg_type;
     crc ^= seq;
     crc ^= static_cast<uint8_t>(payload_len & 0xFF);

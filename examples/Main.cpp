@@ -33,8 +33,9 @@ int main(int argc, char** argv) {
     client.request_topic_list();
     client.request_link_status();
 
-    // 3. Main Loop (Polling Latest State @ 10Hz)
-    for (int i = 0; i < 20; ++i) {
+    // 3. Main Loop (Polling Latest State @ 10Hz for 10 seconds)
+    std::cout << "Listening for telemetry..." << std::endl;
+    for (int i = 0; i < 100; ++i) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         pblink::VehicleLocalPosition loc_pos{};

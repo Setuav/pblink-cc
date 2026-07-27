@@ -26,6 +26,27 @@ bool UdpTransport::open() {
         return false;
     }
 
+    int reuse = 1;
+    ::setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+#ifdef SO_REUSEPORT
+    ::setsockopt(_sockfd, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse));
+#endif
+
+    // Bind to _port + 1 (14557)
+    struct sockaddr_in local_addr{};
+    std::memset(&local_addr, 0, sizeof(local_addr));
+    local_addr.sin_family = AF_INET;
+    local_addr.sin_addr.s_addr = INADDR_ANY;
+    local_addr.sin_port = htons(static_cast<uint16_t>(_port + 1));
+
+    if (::bind(_sockfd, reinterpret_cast<struct sockaddr*>(&local_addr), sizeof(local_addr)) < 0) {
+        std::cerr << "[pblink] Failed to bind UDP port " << (_port + 1) << ": " << std::strerror(errno) << ", falling back" << std::endl;
+        local_addr.sin_port = 0;
+        ::bind(_sockfd, reinterpret_cast<struct sockaddr*>(&local_addr), sizeof(local_addr));
+    } else {
+        std::cout << "[pblink] UDP transport listening on port " << (_port + 1) << ", target " << _host << ":" << _port << std::endl;
+    }
+
     // Set non-blocking mode
     int flags = ::fcntl(_sockfd, F_GETFL, 0);
     if (flags >= 0) {
